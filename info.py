@@ -7,8 +7,6 @@ import re
 from os import environ
 
 # --- CRITICAL DNS FIX FOR MONGODB ---
-# This must be at the very top. It forces the environment to use Google DNS
-# to resolve the MongoDB shards directly, bypassing Render's internal DNS issues.
 try:
     dns.resolver.default_resolver = dns.resolver.Resolver(configure=False)
     dns.resolver.default_resolver.nameservers = ['8.8.8.8']
@@ -18,6 +16,11 @@ except Exception as e:
 from Script import script 
 
 id_pattern = re.compile(r'^.\d+$')
+
+# --- DEPLOYMENT FIXES ---
+# Added ON_HEROKU to fix NameError in bot.py
+ON_HEROKU = bool(environ.get('ON_HEROKU', False))
+IS_P_TOKEN = bool(environ.get('IS_P_TOKEN', False))
 
 # Bot information
 SESSION = environ.get('SESSION', 'cinebot')
@@ -52,10 +55,7 @@ INDEX_REQ_CHANNEL = int(environ.get('INDEX_REQ_CHANNEL', LOG_CHANNEL))
 support_chat_id = environ.get('SUPPORT_CHAT_ID', '-1002412902656')
 SUPPORT_CHAT_ID = int(support_chat_id) if support_chat_id and id_pattern.search(support_chat_id) else None
 
-# --- MONGO DB CONFIGURATION (FIXED) ---
-# We use the 'Standard' URI format. 
-# IMPORTANT: If your Render dashboard has a DATABASE_URI env var, 
-# you MUST update it there too or delete it so it uses this code.
+# --- MONGO DB CONFIGURATION ---
 DEFAULT_URI = "mongodb://vishnusaketh07:cinebot@cluster0-shard-00-00.bdifagm.mongodb.net:27017,cluster0-shard-00-01.bdifagm.mongodb.net:27017,cluster0-shard-00-02.bdifagm.mongodb.net:27017/?ssl=true&replicaSet=atlas-m0z6v5-shard-0&authSource=admin&retryWrites=true&w=majority"
 
 DATABASE_URI = environ.get('DATABASE_URI', DEFAULT_URI)
@@ -64,7 +64,6 @@ COLLECTION_NAME = environ.get('COLLECTION_NAME', 'Luffycollection')
 
 MULTIPLE_DATABASE = bool(environ.get('MULTIPLE_DATABASE', False))
 
-# Logic to prevent empty URI crashes
 if not MULTIPLE_DATABASE:
     USER_DB_URI = DATABASE_URI
     OTHER_DB_URI = DATABASE_URI
