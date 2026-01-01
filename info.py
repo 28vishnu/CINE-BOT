@@ -6,9 +6,9 @@ import dns.resolver
 import re
 from os import environ
 
-# --- DNS FIX FOR MONGODB ---
-# This forces the bot to use Google DNS (8.8.8.8) to resolve your MongoDB cluster.
-# This prevents the "DNS query name does not exist" error on Render.
+# --- CRITICAL DNS FIX FOR MONGODB ---
+# This must be at the very top. It forces the environment to use Google DNS
+# to resolve the MongoDB shards directly, bypassing Render's internal DNS issues.
 try:
     dns.resolver.default_resolver = dns.resolver.Resolver(configure=False)
     dns.resolver.default_resolver.nameservers = ['8.8.8.8']
@@ -53,7 +53,9 @@ support_chat_id = environ.get('SUPPORT_CHAT_ID', '-1002412902656')
 SUPPORT_CHAT_ID = int(support_chat_id) if support_chat_id and id_pattern.search(support_chat_id) else None
 
 # --- MONGO DB CONFIGURATION (FIXED) ---
-# We use the 'Standard' URI format to avoid DNS resolution issues on Render.
+# We use the 'Standard' URI format. 
+# IMPORTANT: If your Render dashboard has a DATABASE_URI env var, 
+# you MUST update it there too or delete it so it uses this code.
 DEFAULT_URI = "mongodb://vishnusaketh07:cinebot@cluster0-shard-00-00.bdifagm.mongodb.net:27017,cluster0-shard-00-01.bdifagm.mongodb.net:27017,cluster0-shard-00-02.bdifagm.mongodb.net:27017/?ssl=true&replicaSet=atlas-m0z6v5-shard-0&authSource=admin&retryWrites=true&w=majority"
 
 DATABASE_URI = environ.get('DATABASE_URI', DEFAULT_URI)
